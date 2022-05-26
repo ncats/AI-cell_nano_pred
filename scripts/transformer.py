@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # In[ ]:
 
 
@@ -19,7 +16,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from math import sqrt
 import os, sys
-get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 # In[ ]:

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # In[ ]:
 
 
@@ -23,8 +20,6 @@ from itertools import combinations, permutations
 from sklearn.metrics import r2_score, mean_squared_error
 import pickle
 import os, sys
-get_ipython().run_line_magic('matplotlib', 'inline')
-
 
 # In[ ]:
 
