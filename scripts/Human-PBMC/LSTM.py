@@ -61,7 +61,7 @@ X=df['sequence_final'].values # extract sequence_final as numpy array
 
 import pickle
 # load mapping dict
-with open(output_path+'mapping_dict_f.pkl', 'rb') as handle:
+with open(output_path+'map_dict.pkl', 'rb') as handle:
     map_dict = pickle.load(handle)
 
 
@@ -88,8 +88,7 @@ for val in X: # for val in all sequences
 X = pad_sequences(X_train, maxlen=int(maxlen/size), padding = 'post') # 
 
 y=df['value'].values
-#print(y.shape) # new data generated from sequences to array of integers
-#print(X.shape)
+
 
 
 # In[ ]:

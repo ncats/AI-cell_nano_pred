@@ -21,11 +21,13 @@ from sklearn.metrics import r2_score, mean_squared_error
 import pickle
 import os, sys
 
+
 # In[ ]:
 
 
 seed = 7
 np.random.seed(seed)
+#define path for the output file
 path= os.getcwd()
 output_path = os.path.join(path,'output_results_save/')
 
@@ -33,15 +35,9 @@ output_path = os.path.join(path,'output_results_save/')
 # In[ ]:
 
 
-dataset_train="sample_file_transformer_m2.csv"
+dataset_train="sample_file_transformer_m1.csv"
 df=pd.read_csv(dataset_train) # read training csv
-
-
-# In[ ]:
-
-
-#file with physicochemical properties (numerical descriptors  transformed as categories or bins)
-part_features = pd.read_csv('sample_file_transformer_m2_1.csv')
+#print(len(df))
 
 
 # In[ ]:
@@ -85,7 +81,6 @@ def creatPermutationFile(inputfile):
 
 
 def Train_case(trainFile=dataset_train):
-
     
     seqlist = []
     strandList = []
@@ -96,6 +91,7 @@ def Train_case(trainFile=dataset_train):
     c = 0
     for evryParticle in combDic:
         c = c + 1
+        #print(c)
         seqTuple = rSubset(combDic[evryParticle][0], len(combDic[evryParticle][0]))
         strandIDTuple = rSubset(combDic[evryParticle][1], len(combDic[evryParticle][0]))
 
@@ -128,6 +124,7 @@ mergedList_df_train = Train_case()
 
 maxlen=500 # 
 X=mergedList_df_train['mergedSeq'].values # extract sequence_final as numpy array
+#print(X.shape)
 
 
 # In[ ]:
@@ -135,7 +132,7 @@ X=mergedList_df_train['mergedSeq'].values # extract sequence_final as numpy arra
 
 import pickle
 # load mapping dict
-with open(output_path+'mapping_dict_f.pkl', 'rb') as handle:
+with open(output_path+'map_dict.pkl', 'rb') as handle:
     map_dict = pickle.load(handle)
 
 
@@ -148,31 +145,17 @@ size=3
 # In[ ]:
 
 
-mergedList_df_train = mergedList_df_train.merge(part_features,left_on='particleKey',right_on='Particle')
-
-
-# In[ ]:
-
-
-features_as_sequence = True # false if using the 2 input network
-
 # convert raw data to numerical form and pad
 X_train=[]
-desc_cols = [x for x in mergedList_df_train.columns if 'desc' in x]
-
-for val,descs in zip(mergedList_df_train['mergedSeq'],mergedList_df_train[desc_cols].values): # for val in all sequences
+for val in X: # for val in all sequences
   sublist=[]
   chars=[val[i:i+size] for i in range(0, len(val), size)]
   for char in chars: # for group of characters in a sequence
     if len(char)==size:
       sublist.append(map_dict[char]) # convert chars to integer e.g. converts ACG UUG TTT to 1 2 3
-  
-# First option for adding features to the sequence
-  if features_as_sequence:
-    for desc in descs:
-      sublist.append(map_dict[desc])
-    X_train.append(np.array(sublist))
-    
+  X_train.append(np.array(sublist))
+
+
 X = pad_sequences(X_train, maxlen=int(maxlen/size), padding = 'post') # 
 
 y=mergedList_df_train['valuestosue'].values
@@ -276,17 +259,9 @@ def unison_shuffled_copies(a, b):
 # In[ ]:
 
 
-# This adds the values of particleKey as an aditional column to the X matrix.
+# Add the values of particleKey as an aditional column to the X matrix.
 X = np.append(X, W.reshape(-1,1), axis=1)
 X = np.append(X, Z.reshape(-1,1), axis=1)
-
-
-# In[ ]:
-
-
-# Creates df from particle features
-features_particle = mergedList_df_train[desc_cols].copy()
-features_particle = features_particle.replace({col: map_dict for col in desc_cols}).values
 
 
 # In[ ]:
@@ -297,7 +272,7 @@ cv = KFold(n_splits=5, random_state=1, shuffle=True) # make 5 fold object
 i=0
 models=[]
 iters=10
-EPOCHS =20
+EPOCHS = 20
 loss=[]
 dfs=[]
 dfs_ungrouped = []
@@ -331,9 +306,9 @@ for i in range(iters):
     X_train, X_val = np.asarray(X[train_index,:-2]).astype(int), np.asarray(X[test_index,:-2]).astype(int)
     y_train, y_val = y[train_index], y[test_index]
     z_val,w_val = Z[test_index], W[test_index]
-    
+
     callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5,restore_best_weights=True)
-    
+
     history = model.fit(
       X_train, y_train, batch_size=256, epochs=EPOCHS,validation_data=(X_val,y_val),callbacks = [callback])
     loss.append(np.mean(history.history['val_loss']))
@@ -396,4 +371,10 @@ rmse_score_stdev=round (df1["rmse"].std(),2)
 print("metric\tavg\tstdev")
 print("r2_score\t%.2f\t"% r2_score_df, r2_score_stdev)
 print("rmse\t%.2f\t"% rmse_score, rmse_score_stdev)
+
+
+# In[ ]:
+
+
+
 
